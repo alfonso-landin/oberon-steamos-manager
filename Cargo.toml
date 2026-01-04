@@ -1,0 +1,15 @@
+[package]
+name = "oberon-steamos-manager"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+zbus = { version = "5", default-features = false, features = ["tokio"] }
+tokio = { version = "1", default-features = false, features = ["rt", "macros", "fs", "io-std", "signal"] }
+futures-util = "0.3"
+
+[profile.release-lto]
+inherits = "release"
+lto = true
+opt-level = "s"
+strip = "symbols"
