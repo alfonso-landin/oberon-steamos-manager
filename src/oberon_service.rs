@@ -1,4 +1,5 @@
 use futures_util::stream::StreamExt;
+use std::io::Write;
 use std::sync::Arc;
 use tokio::fs::OpenOptions;
 use tokio::io::AsyncWriteExt;
@@ -38,13 +39,14 @@ fn voltage_for_clock(clock: u32) -> u32 {
 async fn set_clock(clock: u32) -> std::io::Result<()> {
     println!("Setting GPU clock to {} MHz", clock);
     let voltage = voltage_for_clock(clock);
-    // TODO: create output string in the stack to avoid allocations
-    let msg = format!("vc 0 {clock} {voltage}\n");
+    let mut buffer = [0u8; 30];
+    let mut slice = &mut buffer[..];
+    writeln!(slice, "vc 0 {clock} {voltage}")?;
     let mut file = OpenOptions::new()
         .write(true)
         .open("/sys/class/drm/card1/device/pp_od_clk_voltage")
         .await?;
-    file.write_all(msg.as_bytes()).await?;
+    file.write_all(&buffer).await?;
     file.flush().await?;
     file.write_all(b"c\n").await?;
     file.flush().await?;
